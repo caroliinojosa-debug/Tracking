@@ -1,0 +1,5 @@
+flet
+flet-fastapi
+gspread
+oauth2client
+uvicorn
