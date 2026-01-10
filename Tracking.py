@@ -29,7 +29,7 @@ def enviar_aviso_ventas(id_pedido, estados):
         resumen="\n".join([f"- {depto}: {'? LISTO' if listo else '? PENDIENTE'}" for depto, listo in estados.items()])
 
         msg=EmailMessage()
-        msg.set_content(f"Saludos Equipo de Ventas,\n\nSe ha actualizado el seguimiento del pedido #{id_pedido}.\n\nESTADO ACTUAL:\n{resumen}\n\nEnlace de seguimiento: https://huggingface.co/spaces/carolinita007/tracking")
+        msg.set_content(f"Saludos Equipo de Ventas,\n\nSe ha actualizado el seguimiento del pedido #{id_pedido}.\n\nESTADO ACTUAL:\n{resumen}\n\nEnlace de seguimiento: tracking-production-7a93.up.railway.app")
         msg['From']=MI_CORREO
         msg['To']=CORREO_VENTAS
 
@@ -204,6 +204,7 @@ app = FastAPI()
 
 # La línea que ya tienes
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
 
 
