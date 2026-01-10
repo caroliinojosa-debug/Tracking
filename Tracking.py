@@ -78,7 +78,7 @@ def guardar_en_sheets(pedidos):
 # --- APP ---
 CLAVE_ADMIN = "extrusora383"
 
-def main(page: ft.Page, *args, **kwargs):
+async def main(page: ft.Page):
     page.title = "Tracking de Produccion"
     page.window_icon_header="assets/logo.png"
     page.theme_mode = "light"
@@ -200,6 +200,7 @@ app = FastAPI()
 
 # Usamos 'main' porque es el nombre de la función que contiene tu app de Flet
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
 
 
