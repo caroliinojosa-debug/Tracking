@@ -83,7 +83,7 @@ def guardar_en_sheets(pedidos):
 CLAVE_ADMIN = "extrusora383"
 
 async def main(page: ft.Page):
-   page.title = "Tracking de Produccion"
+    page.title = "Tracking de Produccion"
     page.theme_mode = "light"
     page.window_width = 450
     page.bgcolor = "#F0F2F5"
@@ -273,6 +273,7 @@ await mostrar_menu_principal()
 
 app = FastAPI()
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
 
 
