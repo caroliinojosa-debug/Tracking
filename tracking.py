@@ -192,4 +192,5 @@ def main(page: ft.Page, *args, **kwargs):
 
     mostrar_menu_principal()
 
+
 app = flet_fastapi.app(main, assets_dir="assets", before_main=None)
