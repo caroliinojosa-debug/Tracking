@@ -19,9 +19,11 @@ MI_PASSWORD="axojrteyadfhqofs"
 CORREO_VENTAS="rhextrufan@gmail.com"
 
 def conectar_hoja():
-    import json
-    # Esto evita que la app explote al no encontrar el archivo .json
+    # Railway no tiene el archivo credenciales.json, así que leemos la variable secreta
     creds_json = os.environ.get("GOOGLE_CREDS")
+    if not creds_json:
+        raise ValueError("Error: No se encontró la variable GOOGLE_CREDS en Railway")
+    
     creds_dict = json.loads(creds_json)
     creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, SCOPE)
     client = gspread.authorize(creds)
@@ -204,6 +206,7 @@ async def main(page: ft.Page):
 app = FastAPI()
 
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
 
 
