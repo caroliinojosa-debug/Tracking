@@ -114,7 +114,7 @@ async def main(page: ft.Page):
         )
 
     async def mostrar_menu_principal(e=None): # 1. Agregamos async al principio
-    await page.clean_async() # 2. Cambiamos a clean_async con await
+        await page.clean_async() # 2. Cambiamos a clean_async con await
     
     botones = [
         # La barra / le dice a Flet que busque en la carpeta assets que creamos
@@ -273,6 +273,7 @@ await mostrar_menu_principal()
 
 app = FastAPI()
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
 
 
