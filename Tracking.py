@@ -4,8 +4,9 @@ from oauth2client.service_account import ServiceAccountCredentials
 import os
 import smtplib
 from email.message import EmailMessage
+from fastapi import FastAPI
 import flet_fastapi
-
+ 
 # --- CONFIGURACIÓN DE GOOGLE SHEETS ---
 SCOPE = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 ruta_carpeta = os.path.dirname(os.path.abspath(__file__))
@@ -193,11 +194,12 @@ def main(page: ft.Page, *args, **kwargs):
     mostrar_menu_principal()
 
 
-from fastapi import FastAPI 
+
 
 app = FastAPI() 
 
 # Usamos 'main' porque es el nombre de la función que contiene tu app de Flet
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
 
