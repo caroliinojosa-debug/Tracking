@@ -130,7 +130,7 @@ async def main(page: ft.Page):
     await page.add_async(contenedor_principal(botones))
 
    async def vista_admin(e=None): # 1. Agregamos async
-    await page.clean_async() # 2. Usamos await y clean_async
+        await page.clean_async() # 2. Usamos await y clean_async
     
     txt_clave = ft.TextField(label="Contraseña", password=True, width=250, text_align="center")
 
@@ -273,6 +273,7 @@ await mostrar_menu_principal()
 
 app = FastAPI()
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
 
 
