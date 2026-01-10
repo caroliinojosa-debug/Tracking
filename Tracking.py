@@ -129,7 +129,7 @@ async def main(page: ft.Page):
     # 3. Agregamos await y cambiamos a add_async
     await page.add_async(contenedor_principal(botones))
 
-   async def vista_admin(e=None): # 1. Agregamos async
+    async def vista_admin(e=None): # 1. Agregamos async
         await page.clean_async() # 2. Usamos await y clean_async
     
     txt_clave = ft.TextField(label="Contraseña", password=True, width=250, text_align="center")
@@ -152,7 +152,7 @@ async def main(page: ft.Page):
     ]))
 
     async def vista_panel_admin(e=None): # Agregamos async y el evento e
-    await page.clean_async() # Limpieza asíncrona
+        await page.clean_async() # Limpieza asíncrona
     
     await page.add_async(contenedor_principal([
         ft.Image(src="/logo.png", width=80), # Logo con ruta assets
@@ -169,7 +169,7 @@ async def main(page: ft.Page):
     ]))
 
     async def vista_accion_admin(modo): # 1. Agregamos async
-    await page.clean_async() # 2. Limpieza asíncrona
+        await page.clean_async() # 2. Limpieza asíncrona
     
     txt_id = ft.TextField(label="ID del Pedido", width=250)
     col_checks = ft.Column([ft.Checkbox(label=d) for d in DEPTOS])
@@ -235,7 +235,7 @@ async def main(page: ft.Page):
         # Usamos await y add_async para que aparezcan en la web
         await page.add_async(contenedor_principal(controles))
     async def vista_visitante(e=None): # 1. Agregamos async
-    await page.clean_async() # 2. await con clean_async
+        await page.clean_async() # 2. await con clean_async
     
     txt_q = ft.TextField(label="Escriba su N° de Pedido", width=250, text_align="center")
     res = ft.Column()
@@ -273,6 +273,7 @@ await mostrar_menu_principal()
 
 app = FastAPI()
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
 
 
