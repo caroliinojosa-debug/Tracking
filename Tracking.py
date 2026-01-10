@@ -6,7 +6,8 @@ import smtplib
 from email.message import EmailMessage
 from fastapi import FastAPI
 import flet_fastapi
- 
+import json
+
 # --- CONFIGURACIÓN DE GOOGLE SHEETS ---
 SCOPE = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 ruta_carpeta = os.path.dirname(os.path.abspath(__file__))
@@ -18,7 +19,8 @@ MI_PASSWORD="axojrteyadfhqofs"
 CORREO_VENTAS="rhextrufan@gmail.com"
 
 def conectar_hoja():
-    creds = ServiceAccountCredentials.from_json_keyfile_name(CREDS_FILE, SCOPE)
+    creds_dict = json.loads(os.environ.get("GOOGLE_CREDS"))
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, SCOPE)
     client = gspread.authorize(creds)
     return client.open(SHEET_NAME).sheet1
 
@@ -198,13 +200,11 @@ async def main(page: ft.Page):
 
 app = FastAPI()
 
-# Tu función corregida
-async def main(page: ft.Page):
-    # Todo tu código de la app aquí...
-    page.add(ft.Text("App funcionando"))
+
 
 # La línea que ya tienes
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
 
 
