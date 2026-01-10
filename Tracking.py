@@ -196,10 +196,16 @@ async def main(page: ft.Page):
 
 
 
-app = FastAPI() 
+app = FastAPI()
 
-# Usamos 'main' porque es el nombre de la función que contiene tu app de Flet
+# Tu función corregida
+async def main(page: ft.Page):
+    # Todo tu código de la app aquí...
+    page.add(ft.Text("App funcionando"))
+
+# La línea que ya tienes
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
 
 
