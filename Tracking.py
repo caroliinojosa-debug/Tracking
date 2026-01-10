@@ -197,7 +197,7 @@ async def main(page: ft.Page):
         )
 
         # Esta línea DEBE estar al mismo nivel que 'controles'
-        await page.add_async(contenedor_principal(controles))
+        await page.add_async(contenedor_principal(controles))(([
         ft.Image(src="/logo.png", width=80),
         titulo(f"Modo: {modo.capitalize()}"),
         txt_id,
@@ -272,6 +272,7 @@ await mostrar_menu_principal()
 
 app = FastAPI()
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
 
 
