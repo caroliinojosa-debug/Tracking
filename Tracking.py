@@ -4,7 +4,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 import os
 import smtplib
 from email.message import EmailMessage
-import flet.fastapi as flet_fastapi
+import flet_fastapi
 
 # --- CONFIGURACIÓN DE GOOGLE SHEETS ---
 SCOPE = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
@@ -194,3 +194,4 @@ def main(page: ft.Page, *args, **kwargs):
 
 
 app = flet_fastapi.app(main, assets_dir="assets", before_main=None)
+
