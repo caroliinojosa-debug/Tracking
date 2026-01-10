@@ -93,6 +93,7 @@ async def main(page: ft.Page):
     page.bgcolor = "#F0F2F5"
     page.horizontal_alignment = "center"
     page.vertical_alignment = "center"
+    ft.Image(src="/logo.png", width=100, height=100)
 
     DEPTOS = ["Materia_Prima", "Impresion", "Laminacion", "Corte", "Sellado", "Embalaje", "Despacho"]
 
@@ -202,6 +203,7 @@ async def main(page: ft.Page):
 
 app = FastAPI()
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
 
 
