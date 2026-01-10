@@ -268,10 +268,10 @@ async def main(page: ft.Page):
     ]))
 
 # La llamada inicial al final de tu def main() también cambia:
-await mostrar_menu_principal()
-
+        await mostrar_menu_principal()
 app = FastAPI()
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
 
 
