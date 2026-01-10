@@ -168,37 +168,36 @@ async def main(page: ft.Page):
         ft.TextButton("Cerrar Sesion", on_click=mostrar_menu_principal)
     ]))
 
-    async def vista_accion_admin(modo): # 1. Agregamos async
-        await page.clean_async() # 2. Limpieza asíncrona
-    
-    txt_id = ft.TextField(label="ID del Pedido", width=250)
-    col_checks = ft.Column([ft.Checkbox(label=d) for d in DEPTOS])
+    async def vista_accion_admin(modo):
+        await page.clean_async()
+        txt_id = ft.TextField(label="ID del Pedido", width=250)
+        col_checks = ft.Column([ft.Checkbox(label=d) for d in DEPTOS])
 
-    # Función para guardar datos (Debe ser async)
-    async def guardar(e):
-        # Usamos page.run_task para que la app no se congele mientras Google Sheets responde
-        pedidos = await page.run_task(cargar_desde_sheets)
+        # Definimos la lista de controles con sangría exacta
+        controles = [
+            ft.TextButton("< Volver al Panel", on_click=lambda _: page.run_task(vista_panel_admin)), 
+            titulo(modo.upper()), 
+            txt_id
+        ]
         
-        estados = {ck.label: ck.value for ck in col_checks.controls}
-        nuevos_pedidos = [p for p in pedidos if p["id"] != txt_id.value]
+        # Agregamos lógica según el modo
+        if modo == "editar": 
+            controles.append(ft.ElevatedButton("Cargar Datos", on_click=cargar_datos))
+            
+        controles.append(col_checks)
         
-        if modo != "borrar": 
-            nuevos_pedidos.append({"id": txt_id.value, "estados": estados})
-        
-        await page.run_task(guardar_en_sheets, nuevos_pedidos)
-        await vista_panel_admin() # Volvemos al panel con await
+        controles.append(
+            ft.ElevatedButton(
+                "CONFIRMAR ACCION", 
+                on_click=guardar, 
+                bgcolor="green" if modo != "borrar" else "red", 
+                color="white", 
+                width=200
+            )
+        )
 
-    # Función para cargar datos (Debe ser async)
-    async def cargar_datos(e):
-        pedidos = await page.run_task(cargar_desde_sheets)
-        p = next((p for p in pedidos if p["id"] == txt_id.value), None)
-        if p:
-            for ck in col_checks.controls: 
-                ck.value = p["estados"].get(ck.label, False)
-            await page.update_async() # Actualización asíncrona
-
-    # Aquí agregarías los botones a la página (asumo que faltaba el page.add)
-    await page.add_async(contenedor_principal([
+        # Esta línea DEBE estar al mismo nivel que 'controles'
+        await page.add_async(contenedor_principal(controles))
         ft.Image(src="/logo.png", width=80),
         titulo(f"Modo: {modo.capitalize()}"),
         txt_id,
@@ -273,6 +272,7 @@ await mostrar_menu_principal()
 
 app = FastAPI()
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
 
 
