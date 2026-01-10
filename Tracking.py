@@ -193,5 +193,11 @@ def main(page: ft.Page, *args, **kwargs):
     mostrar_menu_principal()
 
 
-app = flet_fastapi.app(main, assets_dir="assets", before_main=None)
+from fastapi import FastAPI 
+
+app = FastAPI() 
+
+# Usamos 'main' porque es el nombre de la función que contiene tu app de Flet
+app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
