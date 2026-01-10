@@ -200,12 +200,9 @@ async def main(page: ft.Page):
 
     mostrar_menu_principal()
 
-
-
-
 app = FastAPI()
-
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
 
 
