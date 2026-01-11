@@ -1,9 +1,10 @@
-fastapi
 flet
 flet-fastapi
+fastapi
 uvicorn
 gspread
 oauth2client
+
 
 
 
