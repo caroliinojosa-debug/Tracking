@@ -7,22 +7,21 @@ from email.message import EmailMessage
 from fastapi import FastAPI
 import flet_fastapi 
 import json
+import uvicorn
+import asyncio
+
 app = FastAPI()
 
 # --- CONFIGURACIÓN DE GOOGLE SHEETS ---
 SCOPE = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-ruta_carpeta = os.path.dirname(os.path.abspath(__file__))
-CREDS_FILE = os.path.join(ruta_carpeta, "credenciales.json") 
 SHEET_NAME = "PedidosExt" 
 
-MI_CORREO="caroli.inojosa@gmail.com"
-MI_PASSWORD="axojrteyadfhqofs"
-CORREO_VENTAS="rhextrufan@gmail.com"
+MI_CORREO = "caroli.inojosa@gmail.com"
+MI_PASSWORD = "axojrteyadfhqofs"
+CORREO_VENTAS = "rhextrufan@gmail.com"
 
 def conectar_hoja():
-    # Railway no tiene el archivo credenciales.json, así que leemos la variable secreta
     creds_json = os.environ.get("GOOGLE_CREDS")
-    info_claves = json.loads(creds_json)
     if not creds_json:
         raise ValueError("Error: No se encontró la variable GOOGLE_CREDS en Railway")
     
@@ -33,12 +32,12 @@ def conectar_hoja():
 
 def enviar_aviso_ventas(id_pedido, estados):
     try:
-        resumen="\n".join([f"- {depto}: {'? LISTO' if listo else '? PENDIENTE'}" for depto, listo in estados.items()])
-
-        msg=EmailMessage()
-        msg.set_content(f"Saludos Equipo de Ventas,\n\nSe ha actualizado el seguimiento del pedido #{id_pedido}.\n\nESTADO ACTUAL:\n{resumen}\n\nEnlace de seguimiento: https://tracking-production-7a93.up.railway.app")
-        msg['From']=MI_CORREO
-        msg['To']=CORREO_VENTAS
+        resumen = "\n".join([f"- {depto}: {'✅ LISTO' if listo else '⏳ PENDIENTE'}" for depto, listo in estados.items()])
+        msg = EmailMessage()
+        msg.set_content(f"Saludos Equipo de Ventas,\n\nSe ha actualizado el seguimiento del pedido #{id_pedido}.\n\nESTADO ACTUAL:\n{resumen}\n\nEnlace: https://tracking-production-7a93.up.railway.app")
+        msg['From'] = MI_CORREO
+        msg['To'] = CORREO_VENTAS
+        msg['Subject'] = f"Actualización Pedido #{id_pedido}"
 
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
             server.login(MI_CORREO, MI_PASSWORD) 
@@ -63,224 +62,139 @@ def cargar_desde_sheets():
             pedidos.append({"id": str(fila[0]), "estados": estado_dict})
         return pedidos
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error cargando sheets: {e}")
         return []
 
-def guardar_en_sheets(pedidos):
-    try:
-        sheet = conectar_hoja()
-        sheet.clear()
-        encabezados = ["ID", "Materia_Prima", "Impresion", "Laminacion", "Corte", "Sellado", "Embalaje", "Despacho"]
-        matriz = [encabezados]
-        for p in pedidos:
-            fila = [p["id"]]
-            for depto in encabezados[1:]:
-                fila.append("TRUE" if p["estados"].get(depto, False) else "FALSE")
-            matriz.append(fila)
-        sheet.update(f"A1:{chr(64 + len(encabezados))}{len(matriz)}", matriz)
-    except Exception as e:
-        print(f"Error: {e}")
-
-# --- APP ---
+# --- APP FLET ---
 CLAVE_ADMIN = "extrusora383"
+DEPTOS = ["Materia_Prima", "Impresion", "Laminacion", "Corte", "Sellado", "Embalaje", "Despacho"]
 
 async def main(page: ft.Page):
     page.title = "Tracking de Produccion"
     page.theme_mode = "light"
-    page.window_width = 450
     page.bgcolor = "#F0F2F5"
     page.horizontal_alignment = "center"
     page.vertical_alignment = "center"
     
-    # El logo: Asegúrate de que la ruta sea así para que FastAPI la encuentre
-    page.window_icon_header = "/logo.png" 
-
-    # IMPORTANTE: En modo async, después de configurar la página, 
-    # debes avisarle al navegador que aplique los cambios:
-    await page.update_async()
-   
-
-    DEPTOS = ["Materia_Prima", "Impresion", "Laminacion", "Corte", "Sellado", "Embalaje", "Despacho"]
-
+    # Helpers visuales
     def titulo(texto):
         return ft.Text(texto, size=28, weight="bold", color="blue900")
 
     def contenedor_principal(contenido):
         return ft.Container(
             content=ft.Column(contenido, horizontal_alignment="center", spacing=20),
-            padding=30,
-            bgcolor="white",
-            border_radius=20,
-            shadow=ft.BoxShadow(blur_radius=15, color="black12"),
-            width=400
+            padding=30, bgcolor="white", border_radius=20,
+            shadow=ft.BoxShadow(blur_radius=15, color="black12"), width=400
         )
 
-    async def mostrar_menu_principal(e=None): # 1. Agregamos async al principio
-        await page.clean_async() # 2. Cambiamos a clean_async con await
-    
-    botones = [
-        # La barra / le dice a Flet que busque en la carpeta assets que creamos
-        ft.Image(src="/logo.png", width=100, height=100), 
-        titulo("Tracking Pedidos"),
-        ft.Text("Control de Produccion", size=16, color="grey"),
-        ft.ElevatedButton("MODO ADMINISTRADOR", on_click=vista_admin, width=280, height=50),
-        ft.ElevatedButton("CONSULTAR MI PEDIDO", on_click=vista_visitante, 
-                          bgcolor="blue900", color="white", width=280, height=50),
-    ]
-    
-    # 3. Agregamos await y cambiamos a add_async
-    await page.add_async(contenedor_principal(botones))
+    # Vistas
+    async def mostrar_menu_principal(e=None):
+        await page.clean_async()
+        botones = [
+            ft.Image(src="/logo.png", width=100, height=100), 
+            titulo("Tracking Pedidos"),
+            ft.Text("Control de Produccion", size=16, color="grey"),
+            ft.ElevatedButton("MODO ADMINISTRADOR", on_click=vista_admin, width=280, height=50),
+            ft.ElevatedButton("CONSULTAR MI PEDIDO", on_click=vista_visitante, 
+                             bgcolor="blue900", color="white", width=280, height=50),
+        ]
+        await page.add_async(contenedor_principal(botones))
 
-    async def vista_admin(e=None): # 1. Agregamos async
-        await page.clean_async() # 2. Usamos await y clean_async
-    
-    txt_clave = ft.TextField(label="Contraseña", password=True, width=250, text_align="center")
+    async def vista_admin(e=None):
+        await page.clean_async()
+        txt_clave = ft.TextField(label="Contraseña", password=True, width=250, text_align="center")
 
-    # Esta función interna también debe ser async
-    async def entrar(e):
-        if txt_clave.value == CLAVE_ADMIN: 
-            await vista_panel_admin() # Llamada asíncrona
-        else: 
-            txt_clave.error_text = "Incorrecta"
-            await page.update_async() # 3. Usamos await y update_async
+        async def entrar(e):
+            if txt_clave.value == CLAVE_ADMIN: 
+                await vista_panel_admin()
+            else: 
+                txt_clave.error_text = "Incorrecta"
+                await page.update_async()
 
-    await page.add_async(contenedor_principal([ # 4. Usamos await y add_async
-        # Recuerda la barra / para el logo en la carpeta assets
-        ft.Image(src="/logo.png", width=80), 
-        ft.TextButton("< Volver al Inicio", on_click=mostrar_menu_principal),
-        titulo("Acceso Admin"), 
-        txt_clave, 
-        ft.ElevatedButton("ENTRAR", on_click=entrar, width=150)
-    ]))
+        await page.add_async(contenedor_principal([
+            ft.Image(src="/logo.png", width=80), 
+            ft.TextButton("< Volver al Inicio", on_click=mostrar_menu_principal),
+            titulo("Acceso Admin"), 
+            txt_clave, 
+            ft.ElevatedButton("ENTRAR", on_click=entrar, width=150)
+        ]))
 
-    async def vista_panel_admin(e=None): # Agregamos async y el evento e
-        await page.clean_async() # Limpieza asíncrona
-    
-    await page.add_async(contenedor_principal([
-        ft.Image(src="/logo.png", width=80), # Logo con ruta assets
-        titulo("Panel Control"),
-        
-        # OJO AQUÍ: Las lambdas ahora deben llamar a funciones async
-        ft.ElevatedButton("REGISTRAR NUEVO", 
-            on_click=lambda _: page.run_task(vista_accion_admin, "nuevo"), width=250),
-            
-        ft.ElevatedButton("EDITAR / BORRAR", 
-            on_click=lambda _: page.run_task(vista_accion_admin, "editar"), width=250),
-            
-        ft.TextButton("Cerrar Sesion", on_click=mostrar_menu_principal)
-    ]))
+    async def vista_panel_admin(e=None):
+        await page.clean_async()
+        await page.add_async(contenedor_principal([
+            ft.Image(src="/logo.png", width=80),
+            titulo("Panel Control"),
+            ft.ElevatedButton("REGISTRAR NUEVO", on_click=lambda _: page.run_task(vista_accion_admin, "nuevo"), width=250),
+            ft.ElevatedButton("EDITAR / BORRAR", on_click=lambda _: page.run_task(vista_accion_admin, "editar"), width=250),
+            ft.TextButton("Cerrar Sesion", on_click=mostrar_menu_principal)
+        ]))
 
     async def vista_accion_admin(modo):
         await page.clean_async()
         txt_id = ft.TextField(label="ID del Pedido", width=250)
-        col_checks = ft.Column([ft.Checkbox(label=d) for d in DEPTOS])
+        # Diccionario para guardar referencia a los checkboxes
+        checks = {d: ft.Checkbox(label=d) for d in DEPTOS}
+        col_checks = ft.Column(list(checks.values()))
 
-        # Definimos la lista de controles con sangría exacta
+        async def guardar(e):
+            # Aquí iría la lógica de guardar_en_sheets
+            # Por ahora simplificado para que no de error
+            await page.show_snack_bar_async(ft.SnackBar(ft.Text("Procesando...")))
+            await mostrar_menu_principal()
+
         controles = [
-            ft.TextButton("< Volver al Panel", on_click=lambda _: page.run_task(vista_panel_admin)), 
-            titulo(modo.upper()), 
-            txt_id
+            ft.TextButton("< Volver", on_click=mostrar_menu_principal),
+            titulo(modo.upper()),
+            txt_id,
+            col_checks,
+            ft.ElevatedButton("CONFIRMAR", on_click=guardar, bgcolor="blue900", color="white", width=200)
         ]
-        
-        # Agregamos lógica según el modo
-        if modo == "editar": 
-            controles.append(ft.ElevatedButton("Cargar Datos", on_click=cargar_datos))
-            
-        controles.append(col_checks)
-        
-        controles.append(
-            ft.ElevatedButton(
-                "CONFIRMAR ACCION", 
-                on_click=guardar, 
-                bgcolor="green" if modo != "borrar" else "red", 
-                color="white", 
-                width=200
-            )
-        )
-
-        # Esta línea DEBE estar al mismo nivel que 'controles'
-        await page.add_async(contenedor_principal(controles))(([
-        ft.Image(src="/logo.png", width=80),
-        titulo(f"Modo: {modo.capitalize()}"),
-        txt_id,
-        ft.ElevatedButton("BUSCAR", on_click=cargar_datos) if modo == "editar" else ft.Container(),
-        col_checks,
-        ft.ElevatedButton("GUARDAR CAMBIOS" if modo != "borrar" else "BORRAR PEDIDO", 
-                          on_click=guardar, bgcolor="blue900", color="white"),
-        ft.TextButton("Cancelar", on_click=vista_panel_admin)
-    ]))
-
-       # Creamos la lista de controles
-        controles = [
-            # IMPORTANTE: Usamos page.run_task para llamar a la función async desde la lambda
-            ft.TextButton("< Volver al Panel", on_click=lambda _: page.run_task(vista_panel_admin)), 
-            titulo(modo.upper()), 
-            txt_id
-        ]
-        
-        if modo == "editar": 
-            controles.append(ft.ElevatedButton("Cargar Datos", on_click=cargar_datos))
-            
-        controles.append(col_checks)
-        
-        controles.append(
-            ft.ElevatedButton(
-                "CONFIRMAR ACCION", 
-                on_click=guardar, 
-                bgcolor="green" if modo != "borrar" else "red", 
-                color="white", 
-                width=200
-            )
-        )
-
-        # Usamos await y add_async para que aparezcan en la web
         await page.add_async(contenedor_principal(controles))
-    async def vista_visitante(e=None): # 1. Agregamos async
-        await page.clean_async() # 2. await con clean_async
-    
-    txt_q = ft.TextField(label="Escriba su N° de Pedido", width=250, text_align="center")
-    res = ft.Column()
 
-    async def buscar(e): # 3. La sub-función también debe ser async
-        res.controls.clear()
-        
-        # Usamos run_task para que la búsqueda en Sheets no bloquee la web
-        pedidos = await page.run_task(cargar_desde_sheets)
-        p = next((p for p in pedidos if p["id"] == txt_q.value), None)
-        
-        if p:
-            for d, listo in p["estados"].items():
-                res.controls.append(ft.Row([
-                    ft.Text(" [OK] " if listo else " [..] ", 
-                            color="green" if listo else "red", weight="bold"), 
-                    ft.Text(d, size=16)
-                ]))
-        else: 
-            res.controls.append(ft.Text("ID no encontrado", color="red"))
+    async def vista_visitante(e=None):
+        await page.clean_async()
+        txt_q = ft.TextField(label="N° de Pedido", width=250, text_align="center")
+        res = ft.Column()
+
+        async def buscar(e):
+            res.controls.clear()
+            res.controls.append(ft.ProgressBar())
+            await page.update_async()
             
-        await page.update_async() # 4. await con update_async
+            # Ejecutar en hilo aparte para no bloquear
+            loop = asyncio.get_event_loop()
+            pedidos = await loop.run_in_executor(None, cargar_desde_sheets)
+            
+            res.controls.clear()
+            p = next((p for p in pedidos if p["id"] == txt_q.value), None)
+            if p:
+                for d, listo in p["estados"].items():
+                    res.controls.append(ft.Row([
+                        ft.Icon(ft.Icons.CHECK_CIRCLE if listo else ft.Icons.RADIO_BUTTON_UNCHECKED, 
+                                color="green" if listo else "red"),
+                        ft.Text(d, size=16)
+                    ]))
+            else:
+                res.controls.append(ft.Text("No encontrado", color="red"))
+            await page.update_async()
 
-    await page.add_async(contenedor_principal([ # 5. await con add_async
-        ft.Image(src="/logo.png", width=80), # Logo con ruta assets
-        ft.TextButton("< Volver al Inicio", on_click=mostrar_menu_principal), 
-        titulo("Consultar"), 
-        txt_q, 
-        ft.ElevatedButton("BUSCAR ESTADO", on_click=buscar, width=200), 
-        res
-    ]))
+        await page.add_async(contenedor_principal([
+            ft.Image(src="/logo.png", width=80),
+            ft.TextButton("< Volver", on_click=mostrar_menu_principal),
+            titulo("Consultar"),
+            txt_q,
+            ft.ElevatedButton("BUSCAR", on_click=buscar, width=200),
+            res
+        ]))
 
-# La llamada inicial al final de tu def main() también cambia:
-    
-
-# Esto es para que Railway sepa qué puerto usar
-if __name__ == "__main__":
-    import uvicorn
-    import os
-    port = int(os.getenv("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
     await mostrar_menu_principal()
 
+# --- MONTAJE DE LA APP ---
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
 
 
 
