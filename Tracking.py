@@ -38,7 +38,7 @@ def enviar_aviso_ventas(id_pedido, estados):
     try:
         resumen = "\n".join([f"- {d}: {'✅ LISTO' if v else '⏳ PENDIENTE'}" for d, v in estados.items()])
         msg = EmailMessage()
-        msg.set_content(f"Actualización Pedido #{id_pedido}:\n\n{resumen}")
+        msg.set_content(f"Saludos Equipo de Ventas,\n\nSe ha actualizado el seguimiento del pedido #{id_pedido}.\n\nESTADO ACTUAL:\n{resumen}\n\nEnlace: https://{os.getenv('RAILWAY_STATIC_URL', 'seguimiento-de-producción-7a93.up.railway.app')}")
         msg['Subject'] = f"ACTUALIZACIÓN PEDIDO #{id_pedido}"
         msg['From'] = MI_CORREO
         msg['To'] = CORREO_VENTAS
@@ -198,6 +198,7 @@ app.mount("/", app_flet)
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("Tracking:app", host="0.0.0.0", port=port, reload=False)
+
 
 
 
