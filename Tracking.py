@@ -91,6 +91,7 @@ CLAVE_ADMIN = "extrusora383"
 DEPTOS = ["Materia_Prima", "Impresion", "Laminacion", "Corte", "Sellado", "Embalaje", "Despacho"]
 
 async def main(page: ft.Page):
+    page.web_renderer = ft.WebRenderer.HTML
     page.title = "Tracking de Produccion"
     page.theme_mode = ft.ThemeMode.LIGHT
     page.bgcolor = "#F0F2F5"
@@ -233,15 +234,19 @@ async def main(page: ft.Page):
 ruta_actual = os.path.dirname(os.path.abspath(__file__))
 ruta_assets = os.path.join(ruta_actual, "assets")
 
-# Configuramos la app de Flet con la ruta absoluta
-app_flet = flet_fastapi.app(main, assets_dir=ruta_assets)
-
-# Montamos en la raíz
-app.mount("/", app_flet)
+# En lugar de montar con FastAPI, usamos el cargador directo de flet_fastapi
+app = flet_fastapi.app(
+    main, 
+    assets_dir=ruta_assets,
+    app_name="Tracking Dispromm",
+    # Esto fuerza a que la conexión sea más fuerte
+)
 
 if __name__ == "__main__":
+    import uvicorn
     port = int(os.getenv("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run("Tracking:app", host="0.0.0.0", port=port, reload=False)
+
 
 
 
