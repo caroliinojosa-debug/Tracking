@@ -143,68 +143,58 @@ async def main(page: ft.Page):
         checks = [ft.Checkbox(label=d) for d in DEPTOS]
         col_checks = ft.Column(checks)
 
-        # Esta función debe estar bien alineada a la derecha
-async def guardar(e):
-            # 1. Bloqueo visual inmediato
+        # 1. Función para GUARDAR
+        async def ejecutar_guardado(e):
             page.splash = ft.ProgressBar()
             await page.update_async()
-            
             try:
-                # 2. Ejecutar el guardado
-                def proceso_pesado():
-                    pedidos_actuales = cargar_desde_sheets()
-                    # Quitamos el pedido viejo si existe
-                    lista_nueva = [p for p in pedidos_actuales if p["id"] != txt_id.value]
-                    
+                def tarea_backend():
+                    pedidos = cargar_desde_sheets()
+                    nuevos = [p for p in pedidos if p["id"] != txt_id.value]
                     if modo != "borrar":
                         est = {c.label: c.value for c in checks}
-                        lista_nueva.append({"id": txt_id.value, "estados": est})
-                        # Intentar enviar correo, si falla que no detenga el guardado
-                        try:
-                            enviar_aviso_ventas(txt_id.value, est)
-                        except:
-                            pass
-                    
-                    guardar_en_sheets(lista_nueva)
+                        nuevos.append({"id": txt_id.value, "estados": est})
+                        try: enviar_aviso_ventas(txt_id.value, est)
+                        except: pass
+                    guardar_en_sheets(nuevos)
                 
-                # Ejecutamos todo el bloque anterior sin bloquear la pantalla
-                await asyncio.to_thread(proceso_pesado)
-                
+                await asyncio.to_thread(tarea_backend)
             except Exception as ex:
-                print(f"Error crítico: {ex}")
+                print(f"Error: {ex}")
             
-            # 3. Limpieza total y retorno
             page.splash = None
             await page.clean_async()
             await page.update_async()
             await vista_panel_admin()
 
-        async def cargar(e):
-            loop = asyncio.get_event_loop()
-            pedidos = await loop.run_in_executor(None, cargar_desde_sheets)
+        # 2. Función para CARGAR
+        async def ejecutar_carga(e):
+            pedidos = await asyncio.to_thread(cargar_desde_sheets)
             p = next((p for p in pedidos if p["id"] == txt_id.value), None)
             if p:
                 for c in checks:
                     c.value = p["estados"].get(c.label, False)
                 await page.update_async()
 
-        async def volver(e):
+        # 3. Función para VOLVER
+        async def volver_panel(e):
             await vista_panel_admin()
 
+        # Armar la vista
         btns = [
-            ft.TextButton("< Volver", on_click=volver),
+            ft.TextButton("< Volver", on_click=volver_panel),
             ft.Text(modo.upper(), size=20, weight="bold"),
             txt_id
         ]
         if modo == "editar":
-            btns.append(ft.ElevatedButton("Cargar Datos", on_click=cargar))
+            btns.append(ft.ElevatedButton("Cargar Datos", on_click=ejecutar_carga))
         
         btns.append(col_checks)
-        btns.append(ft.ElevatedButton("CONFIRMAR", on_click=guardar, 
+        btns.append(ft.ElevatedButton("CONFIRMAR", on_click=ejecutar_guardado, 
                                      bgcolor="green" if modo != "borrar" else "red", 
                                      color="white", width=200))
+        
         await page.add_async(contenedor_principal(btns))
-
     async def vista_visitante():
         await page.clean_async()
         txt_q = ft.TextField(label="Escriba su N° de Pedido", width=250, text_align="center")
@@ -240,6 +230,7 @@ app.mount("/", app_flet)
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("Tracking:app", host="0.0.0.0", port=port, reload=False)
+
 
 
 
