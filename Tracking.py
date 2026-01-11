@@ -7,6 +7,7 @@ from email.message import EmailMessage
 from fastapi import FastAPI
 import flet_fastapi 
 import json
+app = FastAPI()
 
 # --- CONFIGURACIÓN DE GOOGLE SHEETS ---
 SCOPE = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
@@ -270,8 +271,9 @@ async def main(page: ft.Page):
 
 # La llamada inicial al final de tu def main() también cambia:
     await mostrar_menu_principal()
-app = FastAPI()
+
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
 
 
