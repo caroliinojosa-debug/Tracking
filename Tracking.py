@@ -144,21 +144,36 @@ async def main(page: ft.Page):
         col_checks = ft.Column(checks)
 
         # Esta función debe estar bien alineada a la derecha
-        async def guardar(e):
+async def guardar(e):
+            # 1. Bloqueo visual inmediato
             page.splash = ft.ProgressBar()
             await page.update_async()
-            try:
-                loop = asyncio.get_event_loop()
-                pedidos = await loop.run_in_executor(None, cargar_desde_sheets)
-                nuevos = [p for p in pedidos if p["id"] != txt_id.value]
-                if modo != "borrar":
-                    est = {c.label: c.value for c in checks}
-                    nuevos.append({"id": txt_id.value, "estados": est})
-                    await loop.run_in_executor(None, enviar_aviso_ventas, txt_id.value, est)
-                await loop.run_in_executor(None, guardar_en_sheets, nuevos)
-            except Exception as ex:
-                print(f"Error: {ex}")
             
+            try:
+                # 2. Ejecutar el guardado
+                def proceso_pesado():
+                    pedidos_actuales = cargar_desde_sheets()
+                    # Quitamos el pedido viejo si existe
+                    lista_nueva = [p for p in pedidos_actuales if p["id"] != txt_id.value]
+                    
+                    if modo != "borrar":
+                        est = {c.label: c.value for c in checks}
+                        lista_nueva.append({"id": txt_id.value, "estados": est})
+                        # Intentar enviar correo, si falla que no detenga el guardado
+                        try:
+                            enviar_aviso_ventas(txt_id.value, est)
+                        except:
+                            pass
+                    
+                    guardar_en_sheets(lista_nueva)
+                
+                # Ejecutamos todo el bloque anterior sin bloquear la pantalla
+                await asyncio.to_thread(proceso_pesado)
+                
+            except Exception as ex:
+                print(f"Error crítico: {ex}")
+            
+            # 3. Limpieza total y retorno
             page.splash = None
             await page.clean_async()
             await page.update_async()
@@ -225,6 +240,7 @@ app.mount("/", app_flet)
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("Tracking:app", host="0.0.0.0", port=port, reload=False)
+
 
 
 
