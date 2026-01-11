@@ -21,6 +21,7 @@ CORREO_VENTAS="rhextrufan@gmail.com"
 def conectar_hoja():
     # Railway no tiene el archivo credenciales.json, así que leemos la variable secreta
     creds_json = os.environ.get("GOOGLE_CREDS")
+    info_claves = json.loads(creds_json)
     if not creds_json:
         raise ValueError("Error: No se encontró la variable GOOGLE_CREDS en Railway")
     
@@ -271,6 +272,7 @@ async def main(page: ft.Page):
     await mostrar_menu_principal()
 app = FastAPI()
 app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
 
 
 
