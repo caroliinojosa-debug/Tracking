@@ -71,7 +71,7 @@ async def main(page: ft.Page):
         await page.add_async(
             ft.Container(
                 content=ft.Column([
-                    ft.Icon(ft.Icons.TRACK_CHANGES, size=50, color="blue900"),
+                    ft.Icon(ft.icons.TRACK_CHANGES, size=50, color="blue900"),
                     ft.Text("Tracking Pedidos", size=28, weight="bold", color="blue900"),
                     ft.ElevatedButton("MODO ADMINISTRADOR", on_click=lambda _: page.show_snack_bar_async(ft.SnackBar(ft.Text("Próximamente"))), width=280),
                     ft.ElevatedButton("CONSULTAR MI PEDIDO", on_click=vista_visitante, bgcolor="blue900", color="white", width=280),
@@ -98,7 +98,7 @@ async def main(page: ft.Page):
             if p:
                 for d, listo in p["estados"].items():
                     res.controls.append(ft.Row([
-                        ft.Icon(ft.Icons.CHECK_CIRCLE if listo else ft.Icons.RADIO_BUTTON_UNCHECKED, color="green" if listo else "red"),
+                        ft.icon(ft.Icons.CHECK_CIRCLE if listo else ft.Icons.RADIO_BUTTON_UNCHECKED, color="green" if listo else "red"),
                         ft.Text(d, size=16)
                     ]))
             else:
@@ -126,6 +126,7 @@ app.mount("/", flet_fastapi.app(main))
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
 
 
 
