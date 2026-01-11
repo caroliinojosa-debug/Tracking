@@ -189,8 +189,12 @@ async def main(page: ft.Page):
 
     await mostrar_menu_principal()
 
-app = FastAPI()
-app.mount("/", flet_fastapi.app(main))
+# --- MONTAJE DE LA APP ---
+app.mount("/", flet_fastapi.app(main, assets_dir="assets"))
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
 
 
 
