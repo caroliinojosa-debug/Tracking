@@ -1,8 +1,9 @@
-flet
-flet-fastapi
-fastapi
-uvicorn
+fastapi==0.115.0
+flet==0.25.0
+flet-fastapi==0.1.0
+uvicorn==0.30.0
 gspread
 oauth2client
+
 
 
