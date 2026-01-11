@@ -115,6 +115,7 @@ async def main(page: ft.Page):
             else: txt_clave.error_text = "Incorrecta"; await page.update_async()
         async def volver(e): await mostrar_menu_principal()
         await page.add_async(contenedor_principal([
+            ft.Image(src="/logo.png", width=120),
             ft.TextButton("< Volver", on_click=volver),
             ft.Text("Acceso Admin", size=24, weight="bold"),
             txt_clave,
@@ -128,6 +129,7 @@ async def main(page: ft.Page):
         async def borrar(e): await vista_accion_admin("borrar")
         async def salir(e): await mostrar_menu_principal()
         await page.add_async(contenedor_principal([
+            ft.Image(src="/logo.png", width=120),
             ft.Text("Panel de Control", size=24, weight="bold"),
             ft.ElevatedButton("REGISTRAR NUEVO", on_click=nuevo, width=250),
             ft.ElevatedButton("EDITAR PEDIDO", on_click=editar, width=250),
@@ -182,6 +184,7 @@ async def main(page: ft.Page):
             await page.update_async()
         async def volver(e): await mostrar_menu_principal()
         await page.add_async(contenedor_principal([
+            ft.Image(src="/logo.png", width=120),
             ft.TextButton("< Volver", on_click=volver),
             ft.Text("Consultar Pedido", size=24, weight="bold"),
             txt_q, ft.ElevatedButton("BUSCAR", on_click=buscar, width=200), res
@@ -198,6 +201,7 @@ app.mount("/", app_flet)
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("Tracking:app", host="0.0.0.0", port=port, reload=False)
+
 
 
 
