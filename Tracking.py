@@ -230,7 +230,13 @@ async def main(page: ft.Page):
 
     await mostrar_menu_principal()
 
-app_flet = flet_fastapi.app(main, assets_dir="assets")
+ruta_actual = os.path.dirname(os.path.abspath(__file__))
+ruta_assets = os.path.join(ruta_actual, "assets")
+
+# Configuramos la app de Flet con la ruta absoluta
+app_flet = flet_fastapi.app(main, assets_dir=ruta_assets)
+
+# Montamos en la raíz
 app.mount("/", app_flet)
 
 if __name__ == "__main__":
