@@ -142,46 +142,52 @@ async def main(page: ft.Page):
         txt_id = ft.TextField(label="ID del Pedido", width=250)
         checks = [ft.Checkbox(label=d) for d in DEPTOS]
         col_checks = ft.Column(checks)
-       async def guardar(e):
-            # 1. Bloqueamos la pantalla con la barra de carga
+
+        # Esta función debe estar bien alineada a la derecha
+        async def guardar(e):
             page.splash = ft.ProgressBar()
             await page.update_async()
-            
             try:
                 loop = asyncio.get_event_loop()
                 pedidos = await loop.run_in_executor(None, cargar_desde_sheets)
                 nuevos = [p for p in pedidos if p["id"] != txt_id.value]
-                
                 if modo != "borrar":
                     est = {c.label: c.value for c in checks}
                     nuevos.append({"id": txt_id.value, "estados": est})
-                    # Enviamos el aviso (esto a veces tarda, por eso es asíncrono)
                     await loop.run_in_executor(None, enviar_aviso_ventas, txt_id.value, est)
-                
-                # Guardamos en Google Sheets
                 await loop.run_in_executor(None, guardar_en_sheets, nuevos)
-                
             except Exception as ex:
-                print(f"Error en el proceso: {ex}")
+                print(f"Error: {ex}")
             
-            # 2. LIBERAMOS LA PANTALLA (Esto evita que se guinde)
             page.splash = None
-            await page.clean_async() # Limpiamos la pantalla por completo
-            await page.update_async() # Aplicamos la limpieza
-            
-            # 3. VOLVEMOS AL PANEL
+            await page.clean_async()
+            await page.update_async()
             await vista_panel_admin()
+
         async def cargar(e):
             loop = asyncio.get_event_loop()
             pedidos = await loop.run_in_executor(None, cargar_desde_sheets)
             p = next((p for p in pedidos if p["id"] == txt_id.value), None)
             if p:
-                for c in checks: c.value = p["estados"].get(c.label, False)
+                for c in checks:
+                    c.value = p["estados"].get(c.label, False)
                 await page.update_async()
-        async def volver(e): await vista_panel_admin()
-        btns = [ft.TextButton("< Volver", on_click=volver), ft.Text(modo.upper(), size=20, weight="bold"), txt_id]
-        if modo == "editar": btns.append(ft.ElevatedButton("Cargar Datos", on_click=cargar))
-        btns.extend([col_checks, ft.ElevatedButton("CONFIRMAR", on_click=guardar, bgcolor="green" if modo != "borrar" else "red", color="white", width=200)])
+
+        async def volver(e):
+            await vista_panel_admin()
+
+        btns = [
+            ft.TextButton("< Volver", on_click=volver),
+            ft.Text(modo.upper(), size=20, weight="bold"),
+            txt_id
+        ]
+        if modo == "editar":
+            btns.append(ft.ElevatedButton("Cargar Datos", on_click=cargar))
+        
+        btns.append(col_checks)
+        btns.append(ft.ElevatedButton("CONFIRMAR", on_click=guardar, 
+                                     bgcolor="green" if modo != "borrar" else "red", 
+                                     color="white", width=200))
         await page.add_async(contenedor_principal(btns))
 
     async def vista_visitante():
@@ -219,6 +225,7 @@ app.mount("/", app_flet)
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("Tracking:app", host="0.0.0.0", port=port, reload=False)
+
 
 
 
