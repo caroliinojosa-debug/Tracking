@@ -1,1 +1,1 @@
-web: uvicorn Tracking:app --host 0.0.0.0 --port $PORT --workers 1
+web: uvicorn Tracking:app --host 0.0.0.0 --port $PORT --workers 1 --loop asyncio
