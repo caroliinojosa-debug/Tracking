@@ -18,7 +18,7 @@ SHEET_NAME = "PedidosExt"
 
 MI_CORREO = "caroli.inojosa@gmail.com"
 MI_PASSWORD = "axojrteyadfhqofs"
-CORREO_VENTAS = "rhextrufan@gmail.com"
+CORREO_VENTAS = "ciextrufan@gmail.com"
 
 def conectar_hoja():
     creds_json = os.environ.get("GOOGLE_CREDS")
@@ -230,6 +230,7 @@ app.mount("/", app_flet)
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("Tracking:app", host="0.0.0.0", port=port, reload=False)
+
 
 
 
