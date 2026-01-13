@@ -46,7 +46,7 @@ def enviar_aviso_ventas(id_pedido, estados):
         
         with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context, timeout=15) as smtp:
             smtp.login(MI_CORREO, MI_PASSWORD)
-            smtp.send_message(msg)
+            smtp.sendmail(MI_CORREO, CORREO_VENTAS,)
             print(f"✅ Correo enviado con éxito para el pedido #{id_pedido}")
     except Exception as e: print(f"Error correo: {e}")
 
@@ -233,6 +233,7 @@ app.mount("/", app_flet)
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("Tracking:app", host="0.0.0.0", port=port, reload=False)
+
 
 
 
