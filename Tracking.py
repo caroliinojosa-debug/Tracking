@@ -10,6 +10,7 @@ import json
 import uvicorn
 import asyncio
 import ssl
+import requests
 app = FastAPI()
 
 # --- CONFIGURACIÓN DE GOOGLE SHEETS ---
@@ -243,6 +244,7 @@ app.mount("/", app_flet)
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("Tracking:app", host="0.0.0.0", port=port, reload=False)
+
 
 
 
