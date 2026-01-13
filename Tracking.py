@@ -168,7 +168,8 @@ async def main(page: ft.Page):
                         est = {c.label: c.value for c in checks}
                         nuevos.append({"id": txt_id.value, "estados": est})
                         try: enviar_aviso_ventas(txt_id.value, est)
-                        except: pass
+                       except Exception as e: 
+                           print(f"DEBUG CORREO: Falló el envío porque: {e}")
                     guardar_en_sheets(nuevos)
                 
                 await asyncio.to_thread(tarea_backend)
@@ -243,6 +244,7 @@ app.mount("/", app_flet)
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("Tracking:app", host="0.0.0.0", port=port, reload=False)
+
 
 
 
