@@ -33,22 +33,32 @@ def conectar_hoja():
     except Exception as e:
         print(f"Error conexión: {e}")
         return None
-
+context = ssl.create_default_context()
 def enviar_aviso_ventas(id_pedido, estados):
-    context = ssl.create_default_context()
+    print(f"\n--- [DEBUG] Iniciando proceso para Pedido #{id_pedido} ---")
     resumen = "\n".join([f"- {d}: {'✅ LISTO' if v else '⏳ PENDIENTE'}" for d, v in estados.items()])
+    url = os.getenv('RAILWAY_STATIC_URL', 'https://tracking-production-7a93.up.railway.app/')
     msg = EmailMessage()
-    msg.set_content(f"Saludos Equipo de Ventas,\n\nSe ha actualizado el seguimiento del pedido #{id_pedido}.\n\nESTADO ACTUAL:\n{resumen}\n\nEnlace: https://{os.getenv('RAILWAY_STATIC_URL', 'https://tracking-production-7a93.up.railway.app/')}")
+    msg.set_content(f"Saludos Equipo de Ventas,\n\nSe ha actualizado el estatus del pedido #{id_pedido}.\n\nESTADO ACTUAL:\n{resumen}\n\nEnlace: https://{os.getenv('RAILWAY_STATIC_URL', 'https://tracking-production-7a93.up.railway.app/')}")
     msg['Subject'] = f"ACTUALIZACIÓN PEDIDO #{id_pedido}"
     msg['From'] = MI_CORREO
     msg['To'] = CORREO_VENTAS
     try:
-        
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context, timeout=15) as smtp:
-            smtp.login(MI_CORREO, MI_PASSWORD)
-            smtp.sendmail(MI_CORREO, CORREO_VENTAS,)
-            print(f"✅ Correo enviado con éxito para el pedido #{id_pedido}")
-    except Exception as e: print(f"Error correo: {e}")
+        print(f"Intentando conectar a smtp.gmail.com con {MI_CORREO}...")
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context, timeout=15) as server:
+            server.set_debuglevel(1)
+            server.login(MI_CORREO, MI_PASSWORD)
+            print("Login exitoso. Enviando...")
+            
+            server.send_message(msg)
+            print(f"✅ ¡TERMINADO! El servidor de Google aceptó el correo.")
+            
+    except smtplib.SMTPAuthenticationError:
+        print("❌ ERROR: La contraseña de aplicación es incorrecta o el correo no es válido.")
+    except Exception as e:
+        print(f"❌ ERROR INESPERADO: {e}")
+    
+    print("--- [DEBUG] Fin del proceso de correo ---\n")
 
 def cargar_desde_sheets():
     try:
@@ -233,6 +243,7 @@ app.mount("/", app_flet)
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("Tracking:app", host="0.0.0.0", port=port, reload=False)
+
 
 
 
