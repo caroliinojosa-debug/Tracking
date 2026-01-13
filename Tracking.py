@@ -19,7 +19,7 @@ SHEET_NAME = "PedidosExt"
 MI_CORREO = "ciextrufan@gmail.com"
 MI_PASSWORD = "axojrteyadfhqofs"
 CORREO_VENTAS = "caroli.inojosa@gmail.com"
-context = ssl.create_default_context()
+
 def conectar_hoja():
     creds_json = os.environ.get("GOOGLE_CREDS")
     try:
@@ -35,6 +35,7 @@ def conectar_hoja():
         return None
 
 def enviar_aviso_ventas(id_pedido, estados):
+    context = ssl.create_default_context()
     resumen = "\n".join([f"- {d}: {'✅ LISTO' if v else '⏳ PENDIENTE'}" for d, v in estados.items()])
     msg = EmailMessage()
     msg.set_content(f"Saludos Equipo de Ventas,\n\nSe ha actualizado el seguimiento del pedido #{id_pedido}.\n\nESTADO ACTUAL:\n{resumen}\n\nEnlace: https://{os.getenv('RAILWAY_STATIC_URL', 'https://tracking-production-7a93.up.railway.app/')}")
@@ -43,9 +44,9 @@ def enviar_aviso_ventas(id_pedido, estados):
     msg['To'] = CORREO_VENTAS
     try:
         
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context, timeout=15) as server:
-            server.login(MI_CORREO, MI_PASSWORD)
-            server.send_message(msg)
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context, timeout=15) as smtp:
+            smtp.login(MI_CORREO, MI_PASSWORD)
+            smtp.send_message(msg)
             print(f"✅ Correo enviado con éxito para el pedido #{id_pedido}")
     except Exception as e: print(f"Error correo: {e}")
 
@@ -232,6 +233,7 @@ app.mount("/", app_flet)
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("Tracking:app", host="0.0.0.0", port=port, reload=False)
+
 
 
 
