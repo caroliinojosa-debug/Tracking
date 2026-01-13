@@ -45,7 +45,7 @@ def enviar_aviso_ventas(id_pedido, estados):
     msg['To'] = CORREO_VENTAS
     try:
         print(f"Intentando conectar a smtp.gmail.com con {MI_CORREO}...")
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context, timeout=15) as server:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 587, context=context, timeout=15) as server:
             server.set_debuglevel(1)
             server.login(MI_CORREO, MI_PASSWORD)
             print("Login exitoso. Enviando...")
@@ -247,6 +247,7 @@ app.mount("/", app_flet)
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("Tracking:app", host="0.0.0.0", port=port, reload=False)
+
 
 
 
