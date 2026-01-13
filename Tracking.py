@@ -36,7 +36,7 @@ def conectar_hoja():
         return None
 context = ssl.create_default_context()
 def enviar_aviso_ventas(id_pedido, estados):
-    url_google =https://script.google.com/macros/s/AKfycbx9811bZGZ4jJS3LyiGgls-GfM1BAR8G9kKxvqrcnore5WFzuKyIjeP_PzQmUIzaLId/exec
+    url_google = "https://script.google.com/macros/s/AKfycbx9811bZGZ4jJS3LyiGgls-GfM1BAR8G9kKxvqrcnore5WFzuKyIjeP_PzQmUIzaLId/exec"
     resumen_texto = "\n".join([f"- {d}: {'✅ LISTO' if v else '⏳ PENDIENTE'}" for d, v in estados.items()])
     
     parametros = {
@@ -244,6 +244,7 @@ app.mount("/", app_flet)
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("Tracking:app", host="0.0.0.0", port=port, reload=False)
+
 
 
 
