@@ -9,7 +9,7 @@ import flet_fastapi
 import json
 import uvicorn
 import asyncio
-
+import ssl
 app = FastAPI()
 
 # --- CONFIGURACIÓN DE GOOGLE SHEETS ---
@@ -42,7 +42,7 @@ def enviar_aviso_ventas(id_pedido, estados):
         msg['Subject'] = f"ACTUALIZACIÓN PEDIDO #{id_pedido}"
         msg['From'] = MI_CORREO
         msg['To'] = CORREO_VENTAS
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as server:
             server.login(MI_CORREO, MI_PASSWORD)
             server.send_message(msg)
     except Exception as e: print(f"Error correo: {e}")
@@ -230,6 +230,7 @@ app.mount("/", app_flet)
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("Tracking:app", host="0.0.0.0", port=port, reload=False)
+
 
 
 
