@@ -35,25 +35,26 @@ def conectar_hoja():
         return None
 context = ssl.create_default_context()
 def enviar_aviso_ventas(id_pedido, estados):
-    print(f"\n--- [DEBUG] Iniciando proceso para Pedido #{id_pedido} ---")
-    resumen = "\n".join([f"- {d}: {'✅ LISTO' if v else '⏳ PENDIENTE'}" for d, v in estados.items()])
-    msg = EmailMessage()
-    msg.set_content(f"Saludos Equipo de Ventas,\n\nSe ha actualizado el estatus del pedido #{id_pedido}.\n\nESTADO ACTUAL:\n{resumen}\n\nEnlace: https://{os.getenv('RAILWAY_STATIC_URL', 'https://tracking-production-7a93.up.railway.app/')}")
-    msg = EmailMessage()
-    msg['Subject'] = f"ACTUALIZACIÓN PEDIDO #{id_pedido}"
-    msg['From'] = MI_CORREO
-    msg['To'] = CORREO_VENTAS
+    url_google =https://script.google.com/macros/s/AKfycbx9811bZGZ4jJS3LyiGgls-GfM1BAR8G9kKxvqrcnore5WFzuKyIjeP_PzQmUIzaLId/exec
+    resumen_texto = "\n".join([f"- {d}: {'✅ LISTO' if v else '⏳ PENDIENTE'}" for d, v in estados.items()])
+    
+    parametros = {
+        "id": id_pedido,
+        "resumen": resumen_texto
+    }
+    
     try:
-        print(f"Intentando con Puerto 587 y Timeout 15...")
-        # Usamos SMTP normal (no SSL) para que STARTTLS funcione
-        with smtplib.SMTP('smtp.gmail.com', 587, timeout=15) as server:
-            server.set_debuglevel(1)
-            server.starttls(context=context) 
-            server.login(MI_CORREO, MI_PASSWORD)
-            server.send_message(msg)
-            print(f"✅ ¡LOGRADO!")
+        print(f"--- [DEBUG] Avisando a Google del Pedido #{id_pedido} ---")
+        # Railway hace una petición web normal, esto NO se bloquea
+        respuesta = requests.get(url_google, params=parametros, timeout=10)
+        
+        if respuesta.status_code == 200:
+            print(f"✅ ¡ÉXITO! Google recibió la orden y debería enviar el correo.")
+        else:
+            print(f"⚠️ Google respondió con error: {respuesta.status_code}")
+            
     except Exception as e:
-        print(f"❌ SIGUE EL BLOQUEO: {e}")
+        print(f"❌ Error al conectar con el puente de Google: {e}")
 
 def cargar_desde_sheets():
     try:
@@ -242,6 +243,7 @@ app.mount("/", app_flet)
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("Tracking:app", host="0.0.0.0", port=port, reload=False)
+
 
 
 
