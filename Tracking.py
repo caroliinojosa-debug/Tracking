@@ -119,7 +119,7 @@ async def main(page: ft.Page):
 
     async def vista_login_admin():
         await page.clean_async()
-        txt_clave = ft.TextField(label="Contraseña", password=True, width=250, text_align="center")
+        txt_clave = ft.TextField(label="Contraseña", password=True, width=250, can_reveal_password=True, text_align="center", on_submit= lambda _:verificar(None))
         async def entrar(e):
             if txt_clave.value == CLAVE_ADMIN: await vista_panel_admin()
             else: txt_clave.error_text = "Incorrecta"; await page.update_async()
@@ -244,6 +244,7 @@ app.mount("/", app_flet)
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("Tracking:app", host="0.0.0.0", port=port, reload=False)
+
 
 
 
